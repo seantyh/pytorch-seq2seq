@@ -56,7 +56,7 @@ class Seq2seq(nn.Module):
 class Seq2seqMInput(nn.Module):
 
     def __init__(self, encoder, decoder, decode_function=F.log_softmax):
-        super(Seq2seq, self).__init__()
+        super(Seq2seqMInput, self).__init__()
         self.encoder = encoder
         self.decoder = decoder
         self.decode_function = decode_function

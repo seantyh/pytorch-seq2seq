@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torch
 
 from .baseRNN import BaseRNN
 
@@ -40,7 +41,7 @@ class EncoderRNN_MInput(BaseRNN):
     def __init__(self, vocab_size, max_len, hidden_size,
                  input_dropout_p=0, dropout_p=0,
                  n_layers=1, bidirectional=False, rnn_cell='gru', variable_lengths=False,
-                 embedding=None, update_embedding=True):
+                 embedding=None, update_embedding=True, aux_size=4):
         super(EncoderRNN_MInput, self).__init__(vocab_size, max_len, hidden_size,
                 input_dropout_p, dropout_p, n_layers, rnn_cell)
 
@@ -49,7 +50,7 @@ class EncoderRNN_MInput(BaseRNN):
         if embedding is not None:
             self.embedding.weight = nn.Parameter(embedding)
         self.embedding.weight.requires_grad = update_embedding
-        self.rnn = self.rnn_cell(hidden_size, hidden_size, n_layers,
+        self.rnn = self.rnn_cell(hidden_size+aux_size, hidden_size+aux_size, n_layers,
                                  batch_first=True, bidirectional=bidirectional, dropout=dropout_p)
 
     def forward(self, input_var, input_aux_var, input_lengths=None):
@@ -66,7 +67,7 @@ class EncoderRNN_MInput(BaseRNN):
             - **hidden** (num_layers * num_directions, batch, hidden_size): variable containing the features in the hidden state h
         """
         embedded = self.embedding(input_var)
-        input_vec = torch.concat([embedded, input_aux_var], dim=1)
+        input_vec = torch.cat([embedded, input_aux_var], dim=2)
         embedded = self.input_dropout(input_vec)
 
         if self.variable_lengths:

@@ -9,12 +9,10 @@ import torchtext
 from torch import optim
 
 import seq2seq
-from seq2seq.evaluator import Evaluator
+from seq2seq.evaluator import EvaluatorMInput
 from seq2seq.loss import NLLLoss
 from seq2seq.optim import Optimizer
 from seq2seq.util.checkpoint import Checkpoint
-
-import pdb
 
 class SupervisedTrainerMInput(object):
     """ The SupervisedTrainerMInput class helps in setting up a training framework in a
@@ -36,7 +34,7 @@ class SupervisedTrainerMInput(object):
             random.seed(random_seed)
             torch.manual_seed(random_seed)
         self.loss = loss
-        self.evaluator = Evaluator(loss=self.loss, batch_size=batch_size)
+        self.evaluator = EvaluatorMInput(loss=self.loss, batch_size=batch_size)
         self.optimizer = None
         self.checkpoint_every = checkpoint_every
         self.print_every = print_every
@@ -99,7 +97,9 @@ class SupervisedTrainerMInput(object):
                 step += 1
                 step_elapsed += 1
 
-                input_variables, input_aux_variables, input_lengths = getattr(batch, seq2seq.src_field_name)
+                input_variables, input_lengths = getattr(batch, seq2seq.src_field_name)
+                src_field = data.fields[seq2seq.src_field_name]
+                input_aux_variables = src_field.getLexVariables(input_variables, device)
                 target_variables = getattr(batch, seq2seq.tgt_field_name)
                 
                 loss = self._train_batch(input_variables, input_aux_variables, input_lengths, target_variables, model, teacher_forcing_ratio)
